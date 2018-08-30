@@ -25,7 +25,7 @@ class Facet:
     
     @__Lazy__
     def serialize(self) -> str:
-        " 序列化 "
+        " 返回Facet信息 "
         lines, sps = '', '    '
         nx, ny, nz = self.normal
         lines += f"{sps}facet normal {nx:#e} {ny:#e} {nz:#e}\n"
