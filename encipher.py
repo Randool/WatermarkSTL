@@ -1,7 +1,9 @@
 import hashlib
 from math import ceil, floor
+
 import numpy as np
 
+from RSA import generate_key
 from solidKit import Solid
 
 
@@ -109,12 +111,18 @@ def __hash_file(STL_file, ID: str, appendix: str) -> str:
     return hash_func.hexdigest()
 
 
-def __watermark(solid: Solid, ord: list, fileName: str = None):
-    """ 根据ord序列重排列三角面并写入文件 """
-    if fileName is None:
-        fileName = "{}_.txt".format(solid.name)
+def __watermark(solid: Solid, ord: list, crackit: bool, outFile: str = None):
+    """
+    根据ord序列重排列三角面并写入文件
+    solid       立体类
+    ord         重拍序列
+    crackit     损坏模式
+    fileName    输出文件名
+    """
+    if outFile is None:
+        outFile = "{}_.txt".format(solid.name)
 
-    with open(fileName, "w") as f:
+    with open(outFile, "w") as f:
         f.write("solid {}\n".format(solid.name))
         for Id in ord:
             facet = solid.facetsID[Id]
@@ -124,10 +132,22 @@ def __watermark(solid: Solid, ord: list, fileName: str = None):
     print("Embedding watermark done!")
 
 
-def embedding_watermark(rawFile: str, ID: str, appendix: str, outFile: str):
+def embedding_watermark(rawFile: str, ID: str, appendix: str, crackit: bool, outFile: str=None):
+    """
+    将hash值嵌入文件中。
+    rawFile:：原始文件名；
+    ID：      发布者ID；
+    appendix：附加信息
+    crackit:  文件损坏处理模式
+    outFile:  输出文件名
+    """
     with open(rawFile, "rb") as f:
         hash_val = __hash_file(f, ID, appendix)
     solid = Solid(rawFile)
     _ref = __get_ref(solid)
     _ord = __ref2ord(_ref, hash_val)
-    __watermark(solid, _ord, outFile)
+    __watermark(solid, _ord, crackit, outFile)
+
+
+def RSA_encrypt(fileName: str):
+    pass
