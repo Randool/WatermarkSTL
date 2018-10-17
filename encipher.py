@@ -1,153 +1,65 @@
-import hashlib
-from math import ceil, floor
+import base64
 
-import numpy as np
-
-from RSA import generate_key
-from solidKit import Solid
+from Crypto import Random
+from Crypto.Cipher import PKCS1_v1_5
+from Crypto.PublicKey import RSA
 
 
-"""
-水印+损坏处理+公钥加密
-"""
+def generate_key(bits=200, privateFile: str = None, publicFile: str = None):
+    random_gen = Random.new().read
+    rsa = RSA.generate(bits=bits, randfunc=random_gen)
+
+    if privateFile is None:
+        privateFile = "private.pem"
+    if publicFile is None:
+        publicFile = "public.pem"
+
+    with open(privateFile, "wb") as f:
+        f.write(rsa.exportKey())
+        print("Private key -> {}".format(privateFile))
+    with open(publicFile, "wb") as f:
+        f.write(rsa.publickey().exportKey())
+        print("Public key -> {}".format(publicFile))
+
+    print("Generate key done!")
 
 
-def __get_ref(solid: Solid) -> list:
-    """ 根据三角面在PCA空间中的排列给出ref。O(nlog(n)) """
-    if hasattr(solid, "ref"):
-        return solid.ref
+def rsa_long_encrypt(pub_key: str, msg: bytes, saveFile: str = None, length=200):
+    """
+    单次加密串的长度最大为 (key_size/8)-11
+    1024bit的证书用100， 2048bit的证书用 200
+    以bytes形式返回保存
+    """
+    pubobj = RSA.importKey(pub_key)
+    pubobj = PKCS1_v1_5.new(pubobj)
+    res = []
+    for i in range(0, len(msg), length):
+        res.append(pubobj.encrypt(msg[i : i + length]))
+    result = b"".join(res)
 
-    if solid.eigvec is None:
-        solid.to_PCA_space()
-
-    _facets = []
-    for i, facet in enumerate(solid.Facets):
-        corex = (facet.v1[0] + facet.v2[0] + facet.v3[0]) / 3
-        corey = (facet.v1[1] + facet.v2[1] + facet.v3[1]) / 3
-        corez = (facet.v1[2] + facet.v2[2] + facet.v3[2]) / 3
-        core = np.array([[corex, corey, corez]])
-        # 得到 PCA中的面中心点，格式：(中心坐标，原始面索引)
-        _facets.append((np.dot(core, solid.eigvec), i))
-
-    # 根据中心点(x,y,z)升序排列
-    _facets.sort(key=lambda f: (f[0][0][0], f[0][0][1], f[0][0][2]))
-
-    ref = [0] * (i + 1)
-    for i, facet in enumerate(_facets):  # 已经排序后的Facets
-        ref[i] = facet[1]
-
-    solid.ref = ref
-    return ref
-
-
-def __ref2ord(ref: list, msg: str) -> list:
-    """ ref序列转ord加密序列，若加密数据小于容量，对数据补0。 """
-    _ref, _ord = ref.copy(), []
-    Id, q = 0, len(_ref)
-    # 末尾补‘0’
-    for bit in msg + "0" * int(np.log2(len(_ref))):
-        if len(_ref) == 1:
-            break
-        if bit == "1":
-            Id, q = Id + ceil(q / 2), floor(q / 2)
-        else:
-            q -= floor(q / 2)
-        if q == 1:
-            _ord.append(_ref[Id])
-            _ref[Id] = _ref[-1]
-            _ref.pop()
-            Id = 0
-            q = len(_ref)
-    _ord.append(_ref[0])
-    _ref = _ref[1:]
-    if len(_ref):
-        _ref.reverse()
-        _ord += _ref
-    return _ord
-
-
-def __ord2S(ref: list, ord: list = None) -> str:
-    """ 使用ref序列解密ord加密序列。注意：结尾可能有多余的0，需要截断。
-    ord为None表示提取水印。"""
-    if ord is None:
-        _ord = [i for i in range(len(ref))]
+    if saveFile is not None:
+        with open(saveFile, "wb") as f:
+            f.write(result)
+        print("Save encrypted messages to {}".format(saveFile))
     else:
-        _ord = ord.copy()
-    _ref = ref.copy()
-    S = ""
-    for item in _ord:
-        Id, q = _ref.index(item), len(_ref)
-        _ref[Id] = _ref[-1]
-        _ref.pop()
-        while q > 1:
-            if Id >= ceil(q / 2):
-                S += "1"
-                Id -= ceil(q / 2)
-                q = floor(q / 2)
-            else:
-                S += "0"
-                q = ceil(q / 2)
-    return S
+        return result
 
 
-def __hash_file(STL_file, ID: str, appendix: str) -> str:
+def rsa_long_decrypt(priv_key: str, msg: bytes, saveFile: str = None, length=256):
     """
-    STL_file:   以二进制打开的文件句柄
-    ID:         上传者的ID
-    appendix:   附加信息
+    1024bit的证书用128 2048bit证书用256位
+    以bytes形式返回保存
     """
-    hash_func = hashlib.md5()
-    while True:
-        data = STL_file.read(1024)
-        if not data:
-            break
-        if STL_file.mode != "rb":
-            data = data.encode()
-        hash_func.update(data)
+    privobj = RSA.importKey(priv_key)
+    privobj = PKCS1_v1_5.new(privobj)
+    res = []
+    for i in range(0, len(msg), length):
+        res.append(privobj.decrypt(msg[i : i + length], "DE Error"))
+    result = b"".join(res)
 
-    hash_func.update(ID.encode())
-    hash_func.update(appendix.encode())
-
-    return hash_func.hexdigest()
-
-
-def __watermark(solid: Solid, ord: list, crackit: bool, outFile: str = None):
-    """
-    根据ord序列重排列三角面并写入文件
-    solid       立体类
-    ord         重拍序列
-    crackit     损坏模式
-    fileName    输出文件名
-    """
-    if outFile is None:
-        outFile = "{}_.txt".format(solid.name)
-
-    with open(outFile, "w") as f:
-        f.write("solid {}\n".format(solid.name))
-        for Id in ord:
-            facet = solid.facetsID[Id]
-            f.writelines(facet.serialize)
-        f.write("endsolid")
-
-    print("Embedding watermark done!")
-
-
-def embedding_watermark(rawFile: str, ID: str, appendix: str, crackit: bool, outFile: str=None):
-    """
-    将hash值嵌入文件中。
-    rawFile:：原始文件名；
-    ID：      发布者ID；
-    appendix：附加信息
-    crackit:  文件损坏处理模式
-    outFile:  输出文件名
-    """
-    with open(rawFile, "rb") as f:
-        hash_val = __hash_file(f, ID, appendix)
-    solid = Solid(rawFile)
-    _ref = __get_ref(solid)
-    _ord = __ref2ord(_ref, hash_val)
-    __watermark(solid, _ord, crackit, outFile)
-
-
-def RSA_encrypt(fileName: str):
-    pass
+    if saveFile is not None:
+        with open(saveFile, "wb") as f:
+            f.write(result)
+        print("Save decrypted messages to {}".format(saveFile))
+    else:
+        return result

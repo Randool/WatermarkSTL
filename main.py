@@ -1,4 +1,4 @@
-from solidKit import Solid, get_ref, watermark, ord2S, ref2ord
+from encipher import embedding_watermark
 
 
 if __name__ == '__main__':
