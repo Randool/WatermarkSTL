@@ -100,7 +100,9 @@ class Solid:
         cntf, i, lines_num = 0, 0, len(lines)
 
         while i < lines_num:
-            line = lines[i].strip().split(" ")
+            # line = lines[i].strip().split(" ")
+            line = lines[i].split()
+            # print(line)
             if line[0] == "solid":
                 self.name = line[1]
             elif line[0] == "facet":

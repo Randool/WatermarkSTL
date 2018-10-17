@@ -1,6 +1,14 @@
 # watermark_in_STL
 Write information into STL file
 
+## TODO
+
+- [x] 创建STL对象
+- [x] 读取文本格式的STL文件
+- [x] 水印的嵌入与提取
+- [ ] 读取二进制格式的STL文件
+- [ ] 文件损坏处理及还原
+
 ## main.py
 This file is used to test the correctness of 'server.py' and 'solidKit.py'.
 
@@ -42,13 +50,13 @@ Display the current stereo in a normal or PCA perspective.
 Binary balance tree is a good way to embed information in files.
 
 
-### get_ref(solid: Solid) -> list
+### __get_ref(solid: Solid) -> list
 Giving reference sequences (ref) according to the arrangement of triangular polygons in PCA space.
 
-### ref2ord(ref: list, msg: str) -> list
+### __ref2ord(ref: list, msg: str) -> list
 Convert the ref to cipher sequence (ord).
 
-### ord2S(ref: list, ord: list=None) -> str
+### __ord2S(ref: list, ord: list=None) -> str
 Decrypts the Ord cipher sequence using the ref sequence.
 
 > The end may have an extra 0, which needs to be truncated.

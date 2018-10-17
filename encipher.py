@@ -5,7 +5,13 @@ from Crypto.Cipher import PKCS1_v1_5
 from Crypto.PublicKey import RSA
 
 
-def generate_key(bits=200, privateFile: str = None, publicFile: str = None):
+def generate_key(bits: int = 2048, privateFile: str = None, publicFile: str = None):
+    """
+    generate_key 参数说明:
+    bits:           1024或2048位证书，推荐2048，更加安全
+    privateFile:    私钥的保存文件名。默认为"private.pem"
+    publicFile:     公钥的保存文件名。默认为"public.pem"
+    """
     random_gen = Random.new().read
     rsa = RSA.generate(bits=bits, randfunc=random_gen)
 
@@ -26,9 +32,10 @@ def generate_key(bits=200, privateFile: str = None, publicFile: str = None):
 
 def rsa_long_encrypt(pub_key: str, msg: bytes, saveFile: str = None, length=200):
     """
-    单次加密串的长度最大为 (key_size/8)-11
-    1024bit的证书用100， 2048bit的证书用 200
-    以bytes形式返回保存
+    pub_key:    公钥值
+    msg:        待加密的信息，注意位bytes形式，非str！
+    saveFile:   私钥保存文件名，会使用二进制形式保存到本地；如果不提供文件名，会返回加密结果
+    length:     明文分段长度，1024位证书使用100，2048位证书使用200，默认200
     """
     pubobj = RSA.importKey(pub_key)
     pubobj = PKCS1_v1_5.new(pubobj)
@@ -45,20 +52,22 @@ def rsa_long_encrypt(pub_key: str, msg: bytes, saveFile: str = None, length=200)
         return result
 
 
-def rsa_long_decrypt(priv_key: str, msg: bytes, saveFile: str = None, length=256):
+def rsa_long_decrypt(priv_key: str, ciphermsg: bytes, saveFile: str = None, length=256):
     """
-    1024bit的证书用128 2048bit证书用256位
-    以bytes形式返回保存
+    priv_key:   私钥值
+    ciphermsg:  加密后的信息，注意位bytes形式，非str！
+    saveFile:   解密后保存文件名，文本形式保存；如果不提供文件名，会返回结果
+    length:     密文分段长度，1024位证书使用128，2048位证书使用256，默认256
     """
     privobj = RSA.importKey(priv_key)
     privobj = PKCS1_v1_5.new(privobj)
     res = []
-    for i in range(0, len(msg), length):
-        res.append(privobj.decrypt(msg[i : i + length], "DE Error"))
-    result = b"".join(res)
+    for i in range(0, len(ciphermsg), length):
+        res.append(privobj.decrypt(ciphermsg[i : i + length], "DE Error"))
+    result = b"".join(res).decode()
 
     if saveFile is not None:
-        with open(saveFile, "wb") as f:
+        with open(saveFile, "w") as f:
             f.write(result)
         print("Save decrypted messages to {}".format(saveFile))
     else:

@@ -111,7 +111,10 @@ def __hash_file(STL_file, ID: str, appendix: str, base=2) -> str:
     elif base == 10:
         return str(int(hash_func.hexdigest(), 16))
     elif base == 2:
-        return bin(int(hash_func.hexdigest(), 16))[2:]
+        # 最终返回128位哈希值
+        bin_val = bin(int(hash_func.hexdigest(), 16))[2:]
+        bin_val = "0" * (128 - len(bin_val)) + bin_val
+        return bin_val
 
 
 def __watermark(solid: Solid, ord: list, crackit: bool, outFile: str):
@@ -133,24 +136,35 @@ def __watermark(solid: Solid, ord: list, crackit: bool, outFile: str):
     print("Embedding watermark done!")
 
 
-def embedding_watermark(rawFile: str, ID: str, appendix: str, crackit: bool, outFile: str):
+def embedding_watermark(
+    rawFile: str, ID: str, appendix: str, crackit: bool, outFile: str, base=2
+) -> str:
     """
-    将hash值嵌入文件中。
-    rawFile:：原始文件名；
-    ID：      发布者ID；
+    将hash值嵌入文件中，并返回hash值。
+    rawFile:  原始文件名
+    ID：      发布者ID
     appendix：附加信息
     crackit:  文件损坏处理模式
     outFile:  输出文件名
+    base:     返回水印的进制，默认是二进制序列
     """
     with open(rawFile, "rb") as f:
         hash_val = __hash_file(f, ID, appendix)
-        #print(hash_val)
+        # print(hash_val)
     solid = Solid(rawFile)
     print(solid)
     _ref = __get_ref(solid)
     _ord = __ref2ord(_ref, hash_val)
-    # 嵌入 hexdigest 的 hash_val
+    
+    # 嵌入 hexdigest 的 hash_val，并返回
     __watermark(solid, _ord, crackit, outFile)
+
+    if base == 2:
+        return hash_val
+    elif base == 10:
+        return str(int(hash_val, 2))
+    elif base == 16:
+        return hex(int(hash_val, 2))
 
 
 def extract_watermark(fileName, base=2) -> str:
@@ -162,7 +176,7 @@ def extract_watermark(fileName, base=2) -> str:
     solid = Solid(fileName)
     __ref = __get_ref(solid)
     __ord = __ord2S(__ref)  # 一个参数标识提取水印
-    # print("Watermark: {}".format(__ord))
+    __ord = __ord[:128]     # 除去后缀0
 
     if base == 2:
         return __ord
