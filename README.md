@@ -4,10 +4,17 @@ Write information into STL file
 ## main.py
 This file is used to test the correctness of 'server.py' and 'solidKit.py'.
 
-## server.py
-During the test phase...
+## encipher.py
+Use RSA to protect the STL file which contains watermark.
 
-Used for receiving and sending STL file.
+There are three funtions in this script:
+```Python
+generate_key(bits=200, privateFile: str = None, publicFile: str = None)
+
+rsa_long_encrypt(pub_key: str, msg: bytes, saveFile: str = None, length=200)
+
+rsa_long_decrypt(priv_key: str, msg: bytes, saveFile: str = None, length=256)
+```
 
 ## solidKit.py
 The file contains mostly useful functions about this project, at least in my part.
@@ -30,6 +37,10 @@ self.PCA_vertex:  np.array    # Vertex in PCA space
 
 ### show_solid(solid: Solid, PCA=False)
 Display the current stereo in a normal or PCA perspective.
+
+## watermark.py
+Binary balance tree is a good way to embed information in files.
+
 
 ### get_ref(solid: Solid) -> list
 Giving reference sequences (ref) according to the arrangement of triangular polygons in PCA space.

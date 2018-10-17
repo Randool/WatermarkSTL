@@ -86,11 +86,12 @@ def __ord2S(ref: list, ord: list = None) -> str:
     return S
 
 
-def __hash_file(STL_file, ID: str, appendix: str) -> str:
+def __hash_file(STL_file, ID: str, appendix: str, base=2) -> str:
     """
     STL_file:   以二进制打开的文件句柄
     ID:         上传者的ID
     appendix:   附加信息
+    base:       返回信息的进制，默认二进制串
     """
     hash_func = hashlib.md5()
     while True:
@@ -104,10 +105,16 @@ def __hash_file(STL_file, ID: str, appendix: str) -> str:
     hash_func.update(ID.encode())
     hash_func.update(appendix.encode())
 
-    return hash_func.hexdigest()
+    val = hash_func.hexdigest()
+    if base == 16:
+        return val
+    elif base == 10:
+        return str(int(hash_func.hexdigest(), 16))
+    elif base == 2:
+        return bin(int(hash_func.hexdigest(), 16))[2:]
 
 
-def __watermark(solid: Solid, ord: list, crackit: bool, outFile: str = None):
+def __watermark(solid: Solid, ord: list, crackit: bool, outFile: str):
     """
     根据ord序列重排列三角面并写入文件
     solid       立体类
@@ -115,8 +122,6 @@ def __watermark(solid: Solid, ord: list, crackit: bool, outFile: str = None):
     crackit     损坏模式
     fileName    输出文件名
     """
-    if outFile is None:
-        outFile = "{}_.txt".format(solid.name)
 
     with open(outFile, "w") as f:
         f.write("solid {}\n".format(solid.name))
@@ -128,7 +133,7 @@ def __watermark(solid: Solid, ord: list, crackit: bool, outFile: str = None):
     print("Embedding watermark done!")
 
 
-def embedding_watermark(rawFile: str, ID: str, appendix: str, crackit: bool, outFile=None):
+def embedding_watermark(rawFile: str, ID: str, appendix: str, crackit: bool, outFile: str):
     """
     将hash值嵌入文件中。
     rawFile:：原始文件名；
@@ -139,16 +144,29 @@ def embedding_watermark(rawFile: str, ID: str, appendix: str, crackit: bool, out
     """
     with open(rawFile, "rb") as f:
         hash_val = __hash_file(f, ID, appendix)
+        #print(hash_val)
     solid = Solid(rawFile)
+    print(solid)
     _ref = __get_ref(solid)
     _ord = __ref2ord(_ref, hash_val)
     # 嵌入 hexdigest 的 hash_val
     __watermark(solid, _ord, crackit, outFile)
 
 
-def extract_watermark(fileName) -> str:
+def extract_watermark(fileName, base=2) -> str:
+    """
+    从STL文件中提取水印
+    fileName:   文件名
+    base:       返回水印的进制，默认为二进制
+    """
     solid = Solid(fileName)
     __ref = __get_ref(solid)
     __ord = __ord2S(__ref)  # 一个参数标识提取水印
-    print("Watermark: {}".format(__ord))
-    return __ord
+    # print("Watermark: {}".format(__ord))
+
+    if base == 2:
+        return __ord
+    elif base == 10:
+        return str(int(__ord, 2))
+    elif base == 16:
+        return hex(int(__ord, 2))

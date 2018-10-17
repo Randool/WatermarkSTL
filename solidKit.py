@@ -1,4 +1,4 @@
-from math import factorial, log2
+from math import factorial, log2, floor
 import numpy as np
 
 
@@ -48,9 +48,9 @@ class Solid:
     """
 
     def __str__(self):
-        _ = len(self.Facets)
-        info1 = "'{}' with {_} facets".format(self.name)
-        info2 = f", which can save about {log2(factorial(_)):#.1f} bits."
+        num = len(self.Facets)
+        info1 = "'{}' with {} facets".format(self.name, num)
+        info2 = ", which can save about {:.0f} bits.".format(floor(log2(factorial(num))))
         return info1 + info2
 
     def __init__(self, STLfile=None):
