@@ -30,15 +30,15 @@ class Facet:
     @__Lazy__
     def serialize(self) -> str:
         """ 返回Facet信息 """
-        lines, sps = "", "    "
+        lines, sps = "", "  "
         nx, ny, nz = self.normal
-        lines += f"{sps}facet normal {nx:#e} {ny:#e} {nz:#e}\n"
-        lines += f"{sps*2}outer loop\n"
-        lines += f"{sps*3}vertex {self.v1[0]:#e} {self.v1[1]:#e} {self.v1[2]:#e}\n"
-        lines += f"{sps*3}vertex {self.v2[0]:#e} {self.v2[1]:#e} {self.v2[2]:#e}\n"
-        lines += f"{sps*3}vertex {self.v3[0]:#e} {self.v3[1]:#e} {self.v3[2]:#e}\n"
-        lines += f"{sps*2}endloop\n"
-        lines += f"{sps}endfacet\n"
+        lines += "{}facet normal {:e} {:e} {:e}\n".format(sps, nx, ny, nz)
+        lines += "{}outer loop\n".format(sps*2)
+        lines += "{}vertex {:e} {:e} {:e}\n".format(sps*3, self.v1[0], self.v1[1], self.v1[2])
+        lines += "{}vertex {:e} {:e} {:e}\n".format(sps*3, self.v2[0], self.v2[1], self.v2[2])
+        lines += "{}vertex {:e} {:e} {:e}\n".format(sps*3, self.v3[0], self.v3[1], self.v3[2])
+        lines += "{}endloop\n".format(sps*2)
+        lines += "{}endfacet\n".format(sps)
         return lines
 
 
@@ -81,8 +81,9 @@ class Solid:
         """ 通过线性变换投射到PCA空间 """
         if self.vertex is None:
             self.get_vertex(update=True)
-        cov_data = np.cov(self.vertex.T)
+        cov_data = np.cov(self.vertex.T)    # 协方差矩阵，3*3
         _, self.eigvec = np.linalg.eig(cov_data)
+        # print(_, self.eigvec)
         self.PCA_vertex = np.dot(self.vertex, self.eigvec)
         return self.PCA_vertex
 

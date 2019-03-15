@@ -136,9 +136,7 @@ def __watermark(solid: Solid, ord: list, crackit: bool, outFile: str):
     print("Embedding watermark done!")
 
 
-def embedding_watermark(
-    rawFile: str, ID: str, appendix: str, crackit: bool, outFile: str, base=2
-) -> str:
+def embedding_watermark(rawFile: str, ID: str, appendix: str, crackit: bool, outFile: str, base=2) -> str:
     """
     将hash值嵌入文件中，并返回hash值。
     rawFile:  原始文件名

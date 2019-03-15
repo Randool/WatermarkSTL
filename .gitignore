@@ -1,4 +1,4 @@
-# 文件夹
+# 锟侥硷拷锟斤拷
 .idea/*
 */.idea/*
 .vscode/*
@@ -9,7 +9,12 @@
 */.ipynb_checkpoints/*
 */__pycache__/*
 
-# 这里只用到了Python
+ref/
+
+*.pem
+*.stl
+
+# 锟斤拷锟斤拷只锟矫碉拷锟斤拷Python
 *.cpp
 *.h
 

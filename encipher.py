@@ -1,4 +1,4 @@
-import base64
+import base64, time
 
 from Crypto import Random
 from Crypto.Cipher import PKCS1_v1_5
@@ -63,7 +63,8 @@ def rsa_long_decrypt(priv_key: str, ciphermsg: bytes, saveFile: str = None, leng
     privobj = PKCS1_v1_5.new(privobj)
     res = []
     for i in range(0, len(ciphermsg), length):
-        res.append(privobj.decrypt(ciphermsg[i : i + length], "DE Error"))
+        tmp = privobj.decrypt(ciphermsg[i : i + length], "Error")
+        res.append(tmp)
     result = b"".join(res).decode()
 
     if saveFile is not None:
