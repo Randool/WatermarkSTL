@@ -1,4 +1,4 @@
-# watermark_in_STL
+# WatermarkSTL
 Write information into STL file
 
 ## TODO
