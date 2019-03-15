@@ -3,7 +3,7 @@ from math import ceil, floor
 
 import numpy as np
 
-from solidKit import Solid
+from .solidKit import Solid
 
 
 def __get_ref(solid: Solid) -> list:
