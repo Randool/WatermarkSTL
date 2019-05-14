@@ -8,4 +8,3 @@ __all__ = [
     "embedding_watermark",
     "extract_watermark",
 ]
-
