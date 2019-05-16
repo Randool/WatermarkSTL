@@ -1,6 +1,6 @@
 from encipher import generate_key, rsa_long_decrypt, rsa_long_encrypt
 from watermark import embedding_watermark, extract_watermark
-import glob, time
+import time
 
 
 """
@@ -20,11 +20,12 @@ embedding_watermark会将hash结果嵌入文本并保存，并返回hash结果
 """
 rawFile = "test.stl"
 ID = "Randool"
-appendix = "Good..."
+appendix = "This is a fantastic code!!!"
 crackit = True
 outFile = "out.stl"
 tic = time.time()
 embed_hash_val = embedding_watermark(rawFile, ID, appendix, crackit, outFile, 16)
+print("嵌入信息 = {}".format(appendix))
 print("嵌入水印 = {}".format(embed_hash_val))
 print("[INFO] embedding hash val: {:.2f} s".format(time.time() - tic))
 
