@@ -53,7 +53,7 @@ class Solid:
         info2 = ", which can save about {:.0f} bits.".format(floor(log2(factorial(num))))
         return info1 + info2
 
-    def __init__(self, STLfile=None):
+    def __init__(self, STLfile:str=None):
         self.name = None        # 立体名
         self.file = STLfile     # STL文件
         self.Facets = []        # 三角面
@@ -68,12 +68,15 @@ class Solid:
     def get_vertex(self, update=False):
         if not update:
             return self.vertex
-        X = []
+        self.vertex = []
         for facet in self.Facets:
-            X.append((facet.v1[0], facet.v1[1], facet.v1[2]))
-            X.append((facet.v2[0], facet.v2[1], facet.v2[2]))
-            X.append((facet.v3[0], facet.v3[1], facet.v3[2]))
-        self.vertex = np.array(X)
+            self.vertex.append((facet.v1[0], facet.v1[1], facet.v1[2]))
+            self.vertex.append((facet.v2[0], facet.v2[1], facet.v2[2]))
+            self.vertex.append((facet.v3[0], facet.v3[1], facet.v3[2]))
+        self.vertex = np.array(self.vertex)
+        self.vertex[:, 0] -= np.average(self.vertex[:, 0])
+        self.vertex[:, 1] -= np.average(self.vertex[:, 1])
+        self.vertex[:, 2] -= np.average(self.vertex[:, 2])
 
         return self.vertex
 
